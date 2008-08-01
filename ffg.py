@@ -8,10 +8,6 @@
 # to have Python 2.5 with Python FlickrAPI installed and `exiv2(1)` to
 # run the program.
 #
-# You will also need to request a Flickr API key and set `API_KEY` and
-# `API_SECRET` variables in the beginning of this file. Unfortunately I
-# cannot distribute my key with this script.
-#
 # Usage
 # =====
 #
@@ -43,6 +39,11 @@
 # The `--from-date YYYY-MM-DD` command line option is meant to allow
 # you fetch only photos taken after that date, but it does not work
 # now.
+#
+# Flickr API keys
+# ===============
+#
+# Please don't use my keys in your applications.
 # 
 # Author and licensing
 # ====================
@@ -61,8 +62,8 @@ from string import capitalize
 
 from flickrapi import FlickrAPI
 
-API_KEY=""
-API_SECRET=""
+API_KEY="bad7960ebd9a9742de19b51b84f70d4a"
+API_SECRET="0755f96015e27777"
 
 def printUsage():
     print 'Usage: ./ffg.py [--from-date YYYY-MM-DD] [--photos-directory=DIR] [--exiv-script=FILE]'
