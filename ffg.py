@@ -112,19 +112,19 @@ def main(write_directory, exiv2_script_file, from_date):
     """Fetch all geotagged photos and write exiv2 script for them.
 
     Retrieve all geotagged photos taken since from_date to
-    write_directory and write a set of exiv2(1) commands storing
-    geotags in EXIF to exiv2_script_file.
+    `write_directory` and write a set of exiv2(1) commands storing
+    geotags in EXIF to `exiv2_script_file`.
 
-    from_date is a string YYYY-MM-DD, write_directory and
-    exiv2_script_file are valid directory and file names,
+    `from_date` is a string YYYY-MM-DD, `write_directory` and
+    `exiv2_script_file` are valid directory and file names,
     respectively.
     """
     def getPhotoData(photo):
         """Return title, url, location of photo."""
         pid = photo.attrib['id']
 
-        # no pattern expressions in etree, thus asserting last size to be
-        # the biggest
+        # no pattern expressions in etree, thus asserting last size to
+        # be the biggest
         lsize = flickr.photos_getSizes(photo_id=pid).getiterator('size')[-1]
         assert lsize.attrib['label'] == 'Large'
 
@@ -164,7 +164,7 @@ def main(write_directory, exiv2_script_file, from_date):
     
     def processPhoto(photo):
         """
-        Retrieve photo to write_directory, write exiv2 commands to
+        Retrieve photo to `write_directory`, write exiv2 commands to
         scriptfile.
         """
         title, url, location = getPhotoData(photo)
@@ -189,7 +189,6 @@ def main(write_directory, exiv2_script_file, from_date):
 
     for photo in photos:
         processPhoto(photo)
-
 
 if __name__ == "__main__":
     main(*makeOptions())
