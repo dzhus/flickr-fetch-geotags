@@ -3,10 +3,10 @@
 # Description
 # ===========
 #
-# This script fetch all geotagged photos from your Flickr account to a
-# local directory and writes `exiv2(1)` script for them. You will need
-# to have Python 2.5 with Python FlickrAPI installed and `exiv2(1)` to
-# run the program.
+# This script fetches all geotagged photos from your Flickr account to
+# a local directory and writes `exiv2(1)` script for them. You will
+# need to have Python 2.5 with Python FlickrAPI installed and
+# `exiv2(1)` to run the program.
 #
 # Usage
 # =====
