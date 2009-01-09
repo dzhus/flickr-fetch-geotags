@@ -66,31 +66,32 @@ from flickrapi import FlickrAPI
 API_KEY="bad7960ebd9a9742de19b51b84f70d4a"
 API_SECRET="0755f96015e27777"
 
-def printUsage():
+def print_usage():
     print 'Usage: ./ffg.py [--from-date YYYY-MM-DD] [--photos-directory=DIR] [--exiv-script=FILE]'
 
-def makeOptions():
-    """Read command line options and return options.
-    
-    Returns directory in which to store photos, name of file to write exiv2(1)
-    commands in and minimal photo taken date.
+def make_options():
     """
-    # defaults
+    Read command line options and return `write_directory`,
+    `exiv2_file_path`, `from_date` settings.
+    """
+    # Default settings
     write_directory = os.getcwd()
-    exiv2_script_file = os.path.join(write_directory, 'exiv2.sh')
+    exiv2_file_path = os.path.join(write_directory, 'exiv2.sh')
     # Jesus loves me
     from_date = "0000-00-00"
 
     # Parse command line options
     try:
-        options, arguments = getopt.getopt(sys.argv[1:], [], ['exiv-script=', 
-                                                              'from-date=', 
-                                                              'write-directory='])
+        options, arguments = getopt.getopt(sys.argv[1:], [],
+                                           ['exiv-script=', 
+                                            'from-date=', 
+                                            'write-directory='])
     except getopt.GetoptError, err:
         print str(err)
-        printUsage()
+        print_usage()
         sys.exit(2)
 
+    # Parse options, checking write permissions where necessary
     for o, a in options:
         if o == '--from-date':
             from_date = a
@@ -99,83 +100,74 @@ def makeOptions():
                 write_directory = a
             else:
                 print "%s: bad directory" % a
-                printUsage()
+                print_usage()
                 sys.exit(1)
         elif o == '--exiv-script':
             if os.access(a, W_OK) or os.access(os.path.dirname(a), X_OK|W_OK):
-                exiv2_script_file = a
+                exiv2_file_path = a
         else:
             assert False
 
-    return write_directory, exiv2_script_file, from_date
+    return write_directory, exiv2_file_path, from_date
 
-def main(write_directory, exiv2_script_file, from_date):
+def make_exiv_command(key, value, photo_path):
+    return 'exiv2 -M"set %s %s" %s' % (key, value, photo_path)
+    
+def write_location_commands(photo_path, location, exiv2_file):
+    """
+    Given a photo file path and its location information, write to
+    `exiv2_file` a bunch of exiv2 commands which set Exif.GPSInfo tags
+    in file.
+
+    `exiv2_file` is a file object.
+    """
+    def write_command(key, value):
+        exiv2_file.write(make_exiv_command(key, value, photo_path) + '\n')
+
+    # Flickr stores lat/long with up to 6 digits after decimal point,
+    # but in EXIV rationals are used
+    denominator = 10 ** 6
+
+    print 'Writing exiv2 commands...'
+        
+    for key, key_ref in zip(['latitude', 'longitude'], [('N', 'S'), ('E', 'W')]):
+        # write Latitude/Longitude values
+        value = float(location.attrib[key])
+        exif_key = 'Exif.GPSInfo.GPS%s' % capitalize(key)
+        exif_value = '%d/%d 0/1 0/1' % (int(value * denominator), denominator)
+        write_command(exif_key, exif_value)
+
+        # write LatitudeRef/LongitudeRef values
+        exif_ref_value = value > 0 and key_ref[0] or key_ref[1]
+        write_command(exif_key + 'Ref', exif_ref_value)
+
+def get_photo_data(flickr, photo):
+    """Return title, url, location of photo."""
+    pid = photo.attrib['id']
+
+    # no pattern expressions in etree, thus asserting last size to
+    # be the biggest
+    lsize = flickr.photos_getSizes(photo_id=pid).getiterator('size')[-1]
+    assert lsize.attrib['label'] == 'Large'
+
+    loc = flickr.photos_geo_getLocation(photo_id=pid).getiterator('location')[0]
+    title = photo.attrib['title']
+    url = lsize.attrib['source']
+
+    return title, url, loc
+    
+def run(write_directory, exiv2_file_path, from_date):
     """Fetch all geotagged photos and write exiv2 script for them.
 
-    Retrieve all geotagged photos taken since from_date to
+    Retrieve all geotagged photos taken since `from_date` to
     `write_directory` and write a set of exiv2(1) commands storing
-    geotags in EXIF to `exiv2_script_file`.
+    geotags in EXIF to `exiv2_file_path`.
 
     `from_date` is a string YYYY-MM-DD, `write_directory` and
-    `exiv2_script_file` are valid directory and file names,
+    `exiv2_file_path` are valid directory and file names,
     respectively.
     """
-    def getPhotoData(photo):
-        """Return title, url, location of photo."""
-        pid = photo.attrib['id']
-
-        # no pattern expressions in etree, thus asserting last size to
-        # be the biggest
-        lsize = flickr.photos_getSizes(photo_id=pid).getiterator('size')[-1]
-        assert lsize.attrib['label'] == 'Large'
-
-        loc = flickr.photos_geo_getLocation(photo_id=pid).getiterator('location')[0]
-        title = photo.attrib['title']
-        url = lsize.attrib['source']
-
-        return title, url, loc
-    
-    def makeExivCommand(key, value, photo_path):
-        return 'exiv2 -M"set %s %s" %s' % (key, value, photo_path)
-    
-    def writeLocationCommands(photo_path, location):
-        """
-        Given a photo file path and its location information, make exiv2
-        commands to set Exif.GPSInfo tags in file.
-        """
-
-        def writeLocationCommand(key, value):
-            exiv2_script.write(makeExivCommand(key, value, photo_path) + '\n')
-
-        # Flickr stores lat/long up to 6 digits after decimal point
-        denominator = 10 ** 6
-
-        print 'Writing exiv2 commands...'
-        
-        for key, key_ref in zip(['latitude', 'longitude'], [('N', 'S'), ('E', 'W')]):
-            # write Latitude/Longitude values
-            value = float(location.attrib[key])
-            exif_key = 'Exif.GPSInfo.GPS%s' % capitalize(key)
-            exif_value = '%d/%d 0/1 0/1' % (int(value * denominator), denominator)
-            writeLocationCommand(exif_key, exif_value)
-
-            # write LatitudeRef/LongitudeRef values
-            exif_ref_value = value > 0 and key_ref[0] or key_ref[1]
-            writeLocationCommand(exif_key + 'Ref', exif_ref_value)
-    
-    def processPhoto(photo):
-        """
-        Retrieve photo to `write_directory`, write exiv2 commands to
-        scriptfile.
-        """
-        title, url, location = getPhotoData(photo)
-        
-        print 'Retrieving photo %s...' % title
-        filename, headers = urlretrieve(url, os.path.join(write_directory, \
-                                                          os.path.basename(url)))
-        writeLocationCommands(os.path.abspath(filename), location)
-
-    exiv2_script = open(exiv2_script_file, 'w')
+    exiv2_file = open(exiv2_file_path, 'w')
     
     # Start flickring
     flickr = FlickrAPI(API_KEY, API_SECRET, format='etree')
@@ -188,8 +180,15 @@ def main(write_directory, exiv2_script_file, from_date):
     print 'Retrieving list of geotagged photos taken since %s...' % from_date
     photos = flickr.photos_getWithGeoData(min_date_taken=from_date).getiterator('photo')
 
+    # Retrieve photo to `write_directory`, write exiv2 commands to
+    # scriptfile.
     for photo in photos:
-        processPhoto(photo)
+        title, url, location = get_photo_data(flickr, photo)
+        
+        print 'Retrieving photo %s...' % title
+        filename, headers = urlretrieve(url, os.path.join(write_directory, \
+                                                          os.path.basename(url)))
+        write_location_commands(os.path.abspath(filename), location, exiv2_file)
 
 if __name__ == "__main__":
-    main(*makeOptions())
+    run(*make_options())
