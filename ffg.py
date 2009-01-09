@@ -1,57 +1,58 @@
 #! /usr/bin/env python
-#
-# Description
-# ===========
-#
-# This script fetches all geotagged photos from your Flickr account to
-# a local directory and writes `exiv2(1)` script for them. You will
-# need to have Python 2.5 with Python FlickrAPI installed and
-# `exiv2(1)` to run the program.
-#
-# Usage
-# =====
-#
-# To run the script, type in your console:
-#
-#     ./ffg.py --photos-directory=~/flickr-photos/ --exiv-script=~/flickr-photos/exif.sh
-#
-# This will fetch your photos to `~/flicr-photos/` and write necessary
-# `exiv2(1)` commands to `exif.sh` in that directory. Make sure the
-# directory you specify exists and you have a permission to write in
-# it.
-#
-# By default, the script stores photos in current directory and writes
-# commands to `exiv2.sh` file in it.
-#
-# At the beginning of the process, your browser will pop up with
-# Flickr authorization request. You'll have to grant read permissions
-# for this script to operate properly.
-#
-# Then run exiv2.sh with your shell:
-#
-#     sh ~/flickr-photos/exiv2.sh
-#
-# This will write GPS EXIF tags to photos.
-#
-# Problems
-# ========
-#
-# The `--from-date YYYY-MM-DD` command line option is meant to allow
-# you fetch only photos taken after that date, but it does not work
-# now.
-#
-# Flickr API keys
-# ===============
-#
-# Please don't use my keys in your applications.
-# 
-# Author and licensing
-# ====================
-#
-# Copyright (C) 2008 Dmitry Dzhus <dima@sphinx.net.ru>
-#
-# This code is subject to the Python licence, as can be read on
-# http://www.python.org/download/releases/2.5.2/license/
+"""
+Description
+===========
+
+This script fetches all geotagged photos from your Flickr account to
+a local directory and writes `exiv2(1)` script for them. You will
+need to have Python 2.5 with Python FlickrAPI installed and
+`exiv2(1)` to run the program.
+
+Usage
+=====
+
+To run the script, type in your console:
+
+    ./ffg.py --photos-directory=~/flickr-photos/ --exiv-script=~/flickr-photos/exif.sh
+
+This will fetch your photos to `~/flicr-photos/` and write necessary
+`exiv2(1)` commands to `exif.sh` in that directory. Make sure the
+directory you specify exists and you have a permission to write in
+it.
+
+By default, the script stores photos in current directory and writes
+commands to `exiv2.sh` file in it.
+
+At the beginning of the process, your browser will pop up with
+Flickr authorization request. You'll have to grant read permissions
+for this script to operate properly.
+
+Then run exiv2.sh with your shell:
+
+    sh ~/flickr-photos/exiv2.sh
+
+This will write GPS EXIF tags to photos.
+
+Problems
+========
+
+The `--from-date YYYY-MM-DD` command line option is meant to allow
+you fetch only photos taken after that date, but it does not work
+now.
+
+Flickr API keys
+===============
+
+Please don't use my keys in your applications.
+
+Author and licensing
+====================
+
+Copyright (C) 2008 Dmitry Dzhus <dima@sphinx.net.ru>
+
+This code is subject to the Python licence, as can be read on
+http://www.python.org/download/releases/2.5.2/license/
+"""
 
 import sys
 import getopt
