@@ -69,9 +69,9 @@ API_SECRET="0755f96015e27777"
 def print_usage():
     print 'Usage: ./ffg.py [--from-date YYYY-MM-DD] [--photos-directory=DIR] [--exiv-script=FILE]'
 
-def make_options():
+def make_options(cl):
     """
-    Read command line options and return `write_directory`,
+    Read command line options in `opts` and return `write_directory`,
     `exiv2_file_path`, `from_date` settings.
     """
     # Default settings
@@ -82,7 +82,7 @@ def make_options():
 
     # Parse command line options
     try:
-        options, arguments = getopt.getopt(sys.argv[1:], [],
+        options, arguments = getopt.getopt(cl, [],
                                            ['exiv-script=', 
                                             'from-date=', 
                                             'write-directory='])
@@ -191,4 +191,4 @@ def run(write_directory, exiv2_file_path, from_date):
         write_location_commands(os.path.abspath(filename), location, exiv2_file)
 
 if __name__ == "__main__":
-    run(*make_options())
+    run(*make_options(sys.argv[1:]))
